@@ -100,6 +100,11 @@ const CanvasVisualizer = ({ nodes, edges, width, height, onNodePositionChange }:
 
     const color = getEdgeColor(edge);
     const dash = edge.type === 'egress' ? [10, 5] : undefined;
+    const midX = (sourceNode.x + targetNode.x) / 2;
+    const midY = (sourceNode.y + targetNode.y) / 2;
+    const hasAction = Boolean(edge.action);
+    const hasPorts = Boolean(edge.ports && edge.ports.length > 0);
+    const portsText = hasPorts ? edge.ports!.join(', ') : undefined;
 
     return (
       <Group key={edge.id}>
@@ -112,24 +117,30 @@ const CanvasVisualizer = ({ nodes, edges, width, height, onNodePositionChange }:
           pointerLength={10}
           pointerWidth={10}
         />
-        {edge.ports && edge.ports.length > 0 && (
-          <Text
-            text={edge.ports.join(', ')}
-            x={(sourceNode.x + targetNode.x) / 2}
-            y={(sourceNode.y + targetNode.y) / 2 - 10}
-            fontSize={10}
-            fill="#000000"
-            padding={2}
-          />
-        )}
-        {edge.action && (
+        {hasAction && (
           <Text
             text={edge.action}
-            x={(sourceNode.x + targetNode.x) / 2}
-            y={(sourceNode.y + targetNode.y) / 2 + 10}
+            x={midX}
+            y={midY - (hasPorts ? 12 : 6)}
             fontSize={10}
             fill={color}
             fontStyle="bold"
+            width={120}
+            align="center"
+            offsetX={60}
+            padding={2}
+          />
+        )}
+        {portsText && (
+          <Text
+            text={portsText}
+            x={midX}
+            y={midY + (hasAction ? 4 : -6)}
+            fontSize={10}
+            fill="#000000"
+            width={140}
+            align="center"
+            offsetX={70}
             padding={2}
           />
         )}

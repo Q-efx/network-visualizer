@@ -4,6 +4,7 @@ import {
   AdminNetworkPolicy,
   BaseAdminNetworkPolicy,
   LabelSelector,
+  AdminNetworkPolicyPort,
 } from '../types/policies';
 
 // Layout configuration constants
@@ -44,7 +45,9 @@ export interface VisualizationData {
 function getLabelText(selector?: LabelSelector): string {
   if (!selector) return 'any';
   if (selector.matchLabels) {
-    return Object.entries(selector.matchLabels)
+    const entries = Object.entries(selector.matchLabels);
+    if (entries.length === 0) return 'any';
+    return entries
       .map(([k, v]) => `${k}=${v}`)
       .join(', ');
   }
@@ -54,6 +57,22 @@ function getLabelText(selector?: LabelSelector): string {
       .join(', ');
   }
   return 'any';
+}
+
+function formatAdminPort(port: AdminNetworkPolicyPort): string | null {
+  if (!port) return null;
+  if (port.portNumber) {
+    const proto = port.portNumber.protocol?.toUpperCase() || 'TCP';
+    return `${proto}:${port.portNumber.port}`;
+  }
+  if (port.portRange) {
+    const proto = port.portRange.protocol?.toUpperCase() || 'TCP';
+    return `${proto}:${port.portRange.start}-${port.portRange.end}`;
+  }
+  if (port.namedPort) {
+    return `named:${port.namedPort}`;
+  }
+  return null;
 }
 
 export function extractVisualizationData(policies: Policy[]): VisualizationData {
@@ -206,12 +225,17 @@ export function extractVisualizationData(policies: Policy[]): VisualizationData 
             peer.namespaces || peer.pods?.podSelector
           );
 
+          const ports = rule.ports
+            ?.map(formatAdminPort)
+            .filter((p): p is string => Boolean(p));
+
           edges.push({
             id: `edge-${edgeCounter++}`,
             source: sourceNode.id,
             target: targetNode.id,
             type: 'ingress',
             action: rule.action,
+            ports,
             policyName: anp.metadata.name,
             policyKind: 'AdminNetworkPolicy',
           });
@@ -230,12 +254,17 @@ export function extractVisualizationData(policies: Policy[]): VisualizationData 
             peer.namespaces || peer.pods?.podSelector
           );
 
+          const ports = rule.ports
+            ?.map(formatAdminPort)
+            .filter((p): p is string => Boolean(p));
+
           edges.push({
             id: `edge-${edgeCounter++}`,
             source: targetNode.id,
             target: targetEgressNode.id,
             type: 'egress',
             action: rule.action,
+            ports,
             policyName: anp.metadata.name,
             policyKind: 'AdminNetworkPolicy',
           });
@@ -266,12 +295,17 @@ export function extractVisualizationData(policies: Policy[]): VisualizationData 
             peer.namespaces || peer.pods?.podSelector
           );
 
+          const ports = rule.ports
+            ?.map(formatAdminPort)
+            .filter((p): p is string => Boolean(p));
+
           edges.push({
             id: `edge-${edgeCounter++}`,
             source: sourceNode.id,
             target: targetNode.id,
             type: 'ingress',
             action: rule.action,
+            ports,
             policyName: banp.metadata.name,
             policyKind: 'BaseAdminNetworkPolicy',
           });
@@ -290,12 +324,17 @@ export function extractVisualizationData(policies: Policy[]): VisualizationData 
             peer.namespaces || peer.pods?.podSelector
           );
 
+          const ports = rule.ports
+            ?.map(formatAdminPort)
+            .filter((p): p is string => Boolean(p));
+
           edges.push({
             id: `edge-${edgeCounter++}`,
             source: targetNode.id,
             target: targetEgressNode.id,
             type: 'egress',
             action: rule.action,
+            ports,
             policyName: banp.metadata.name,
             policyKind: 'BaseAdminNetworkPolicy',
           });
