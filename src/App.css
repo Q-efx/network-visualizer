@@ -1,0 +1,66 @@
+.app {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.editor-panel {
+  width: 30%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.visualizer-panel {
+  width: 70%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+.header {
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+}
+
+.header h1 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.header p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.canvas-container {
+  flex: 1;
+  position: relative;
+  background-color: #fafafa;
+  overflow: hidden;
+}
+
+.info-panel {
+  display: flex;
+  gap: 20px;
+  padding: 15px 20px;
+  background-color: #f5f5f5;
+  border-top: 2px solid #ddd;
+}
+
+.stat {
+  padding: 8px 16px;
+  background-color: white;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.stat strong {
+  color: #667eea;
+  margin-right: 8px;
+}
