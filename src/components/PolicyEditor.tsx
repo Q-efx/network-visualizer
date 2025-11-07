@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Policy } from '../types/policies';
+import { Policy, LabelSelector } from '../types/policies';
 
 interface PolicyEditorProps {
   onPoliciesChange: (policies: Policy[]) => void;
@@ -97,28 +97,88 @@ spec:
             const namespaceMatch = doc.match(/namespace:\s*([^\n]+)/);
             const namespace = namespaceMatch ? namespaceMatch[1].trim() : 'default';
 
+            // Parse pod selector
+            const appMatch = doc.match(/podSelector:[\s\S]*?app:\s*(\w+)/);
+            const podSelector: LabelSelector = appMatch 
+              ? { matchLabels: { app: appMatch[1] } }
+              : {};
+
+            // Parse ingress rules - simplified
+            const hasIngress = doc.includes('ingress:');
+            const ingressAppMatch = doc.match(/ingress:[\s\S]*?app:\s*(\w+)/);
+            const ingressPortMatch = doc.match(/ingress:[\s\S]*?port:\s*(\d+)/);
+            
+            const ingress = hasIngress && ingressAppMatch ? [{
+              from: [{
+                podSelector: { matchLabels: { app: ingressAppMatch[1] } }
+              }],
+              ports: ingressPortMatch ? [{ protocol: 'TCP', port: parseInt(ingressPortMatch[1]) }] : undefined
+            }] : [];
+
+            // Parse egress rules - simplified
+            const hasEgress = doc.includes('egress:');
+            const egressAppMatch = doc.match(/egress:[\s\S]*?app:\s*(\w+)/);
+            const egressPortMatch = doc.match(/egress:[\s\S]*?port:\s*(\d+)/);
+            
+            const egress = hasEgress && egressAppMatch ? [{
+              to: [{
+                podSelector: { matchLabels: { app: egressAppMatch[1] } }
+              }],
+              ports: egressPortMatch ? [{ protocol: 'TCP', port: parseInt(egressPortMatch[1]) }] : undefined
+            }] : [];
+
             const policy: Policy = {
               apiVersion,
               kind: 'NetworkPolicy',
               metadata: { name, namespace },
               spec: {
-                podSelector: { matchLabels: {} },
+                podSelector,
                 policyTypes: ['Ingress', 'Egress'],
-                ingress: [],
-                egress: [],
+                ingress,
+                egress,
               },
             };
             policies.push(policy);
           } else if (kind === 'AdminNetworkPolicy') {
+            // Parse subject
+            const subjectAppMatch = doc.match(/subject:[\s\S]*?environment:\s*(\w+)/);
+            const subject = subjectAppMatch
+              ? { namespaces: { matchLabels: { environment: subjectAppMatch[1] } } }
+              : { namespaces: {} };
+
+            // Parse ingress rules
+            const ingressActionMatch = doc.match(/ingress:[\s\S]*?action:\s*(\w+)/);
+            const ingressAppMatch = doc.match(/ingress:[\s\S]*?app:\s*(\w+)/);
+            
+            const ingress = ingressActionMatch && ingressAppMatch ? [{
+              name: 'allow-from-monitoring',
+              action: ingressActionMatch[1] as 'Allow' | 'Deny' | 'Pass',
+              from: [{
+                namespaces: { matchLabels: { app: ingressAppMatch[1] } }
+              }]
+            }] : [];
+
+            // Parse egress rules
+            const egressActionMatch = doc.match(/egress:[\s\S]*?action:\s*(\w+)/);
+            const egressExternalMatch = doc.match(/egress:[\s\S]*?external:\s*"?(\w+)"?/);
+            
+            const egress = egressActionMatch && egressExternalMatch ? [{
+              name: 'deny-internet',
+              action: egressActionMatch[1] as 'Allow' | 'Deny' | 'Pass',
+              to: [{
+                namespaces: { matchLabels: { external: egressExternalMatch[1] } }
+              }]
+            }] : [];
+
             const policy: Policy = {
               apiVersion,
               kind: 'AdminNetworkPolicy',
               metadata: { name },
               spec: {
                 priority: 50,
-                subject: { namespaces: { matchLabels: {} } },
-                ingress: [],
-                egress: [],
+                subject,
+                ingress,
+                egress,
               },
             };
             policies.push(policy);
@@ -128,7 +188,7 @@ spec:
               kind: 'BaseAdminNetworkPolicy',
               metadata: { name },
               spec: {
-                subject: { namespaceSelector: { matchLabels: {} } },
+                subject: { namespaceSelector: {} },
                 ingress: [],
                 egress: [],
               },
