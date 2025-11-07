@@ -28,6 +28,15 @@ function App() {
     setVizData(data);
   };
 
+  const handleNodePositionChange = (nodeId: string, x: number, y: number) => {
+    setVizData(prevData => ({
+      ...prevData,
+      nodes: prevData.nodes.map(node =>
+        node.id === nodeId ? { ...node, x, y } : node
+      ),
+    }));
+  };
+
   return (
     <div className="app">
       <div className="editor-panel">
@@ -44,6 +53,7 @@ function App() {
             edges={vizData.edges}
             width={canvasWidth}
             height={canvasHeight - 100}
+            onNodePositionChange={handleNodePositionChange}
           />
           <Legend />
         </div>

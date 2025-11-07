@@ -6,9 +6,10 @@ interface CanvasVisualizerProps {
   edges: VisualEdge[];
   width: number;
   height: number;
+  onNodePositionChange?: (nodeId: string, x: number, y: number) => void;
 }
 
-const CanvasVisualizer = ({ nodes, edges, width, height }: CanvasVisualizerProps) => {
+const CanvasVisualizer = ({ nodes, edges, width, height, onNodePositionChange }: CanvasVisualizerProps) => {
   const getNodeColor = (type: string) => {
     switch (type) {
       case 'namespace':
@@ -33,8 +34,20 @@ const CanvasVisualizer = ({ nodes, edges, width, height }: CanvasVisualizerProps
     const color = getNodeColor(node.type);
     const shape = node.type === 'namespace' ? 'rect' : 'circle';
 
+    const handleDragEnd = (e: { target: { x: () => number; y: () => number } }) => {
+      if (onNodePositionChange) {
+        onNodePositionChange(node.id, e.target.x(), e.target.y());
+      }
+    };
+
     return (
-      <Group key={node.id} x={node.x} y={node.y} draggable>
+      <Group 
+        key={node.id} 
+        x={node.x} 
+        y={node.y} 
+        draggable
+        onDragEnd={handleDragEnd}
+      >
         {shape === 'rect' ? (
           <Rect
             width={120}

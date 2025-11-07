@@ -6,6 +6,15 @@ import {
   LabelSelector,
 } from '../types/policies';
 
+// Layout configuration constants
+const LAYOUT_CONFIG = {
+  NODES_PER_ROW: 5,
+  NODE_HORIZONTAL_SPACING: 200,
+  NODE_VERTICAL_SPACING: 150,
+  INITIAL_X_OFFSET: 100,
+  INITIAL_Y_OFFSET: 100,
+};
+
 export interface VisualNode {
   id: string;
   type: 'namespace' | 'pod' | 'external';
@@ -72,8 +81,8 @@ export function extractVisualizationData(policies: Policy[]): VisualizationData 
       label,
       namespace,
       selector,
-      x: (nodeCounter % 5) * 200 + 100,
-      y: Math.floor(nodeCounter / 5) * 150 + 100,
+      x: (nodeCounter % LAYOUT_CONFIG.NODES_PER_ROW) * LAYOUT_CONFIG.NODE_HORIZONTAL_SPACING + LAYOUT_CONFIG.INITIAL_X_OFFSET,
+      y: Math.floor(nodeCounter / LAYOUT_CONFIG.NODES_PER_ROW) * LAYOUT_CONFIG.NODE_VERTICAL_SPACING + LAYOUT_CONFIG.INITIAL_Y_OFFSET,
     };
     nodeCounter++;
     nodeMap.set(id, node);

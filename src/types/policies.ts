@@ -39,7 +39,7 @@ export interface NetworkPolicy {
   kind: 'NetworkPolicy';
   metadata: {
     name: string;
-    namespace: string;
+    namespace?: string;
     labels?: { [key: string]: string };
   };
   spec: {
