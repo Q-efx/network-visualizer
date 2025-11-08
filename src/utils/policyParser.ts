@@ -9,11 +9,11 @@ import {
 
 // Layout configuration constants
 const LAYOUT_CONFIG = {
-  NODES_PER_ROW: 5,
-  NODE_HORIZONTAL_SPACING: 200,
-  NODE_VERTICAL_SPACING: 150,
-  INITIAL_X_OFFSET: 100,
-  INITIAL_Y_OFFSET: 100,
+  MAX_NODES_PER_ROW: 4,
+  NODE_HORIZONTAL_MARGIN: 80,
+  NODE_VERTICAL_MARGIN: 120,
+  INITIAL_X_OFFSET: 120,
+  INITIAL_Y_OFFSET: 120,
 };
 
 export interface VisualNode {
@@ -82,8 +82,13 @@ export function extractVisualizationData(policies: Policy[]): VisualizationData 
   const edges: VisualEdge[] = [];
   const nodeMap = new Map<string, VisualNode>();
 
-  let nodeCounter = 0;
   let edgeCounter = 0;
+  const layoutState = {
+    nodesInRow: 0,
+    currentX: LAYOUT_CONFIG.INITIAL_X_OFFSET,
+    currentY: LAYOUT_CONFIG.INITIAL_Y_OFFSET,
+    rowMaxHeight: 0,
+  };
 
   const estimateTextSize = (text: string, fontSize = 12, padding = 20) => {
     const lines = text.split('\n');
@@ -107,20 +112,33 @@ export function extractVisualizationData(policies: Policy[]): VisualizationData 
     const labelText = namespace ? `${label}\n(ns: ${namespace})` : label;
     const { width, height } = estimateTextSize(labelText, 12, 30);
 
+    if (layoutState.nodesInRow >= LAYOUT_CONFIG.MAX_NODES_PER_ROW) {
+      layoutState.nodesInRow = 0;
+      layoutState.currentX = LAYOUT_CONFIG.INITIAL_X_OFFSET;
+      layoutState.currentY += layoutState.rowMaxHeight + LAYOUT_CONFIG.NODE_VERTICAL_MARGIN;
+      layoutState.rowMaxHeight = 0;
+    }
+
+    const x = layoutState.currentX + width / 2;
+    const y = layoutState.currentY + height / 2;
+
     const node: VisualNode = {
       id,
       type,
       label,
       namespace,
       selector,
-      x: (nodeCounter % LAYOUT_CONFIG.NODES_PER_ROW) * LAYOUT_CONFIG.NODE_HORIZONTAL_SPACING + LAYOUT_CONFIG.INITIAL_X_OFFSET,
-      y: Math.floor(nodeCounter / LAYOUT_CONFIG.NODES_PER_ROW) * LAYOUT_CONFIG.NODE_VERTICAL_SPACING + LAYOUT_CONFIG.INITIAL_Y_OFFSET,
+      x,
+      y,
       width,
       height,
     };
-    nodeCounter++;
     nodeMap.set(id, node);
     nodes.push(node);
+
+    layoutState.currentX += width + LAYOUT_CONFIG.NODE_HORIZONTAL_MARGIN;
+    layoutState.rowMaxHeight = Math.max(layoutState.rowMaxHeight, height);
+    layoutState.nodesInRow += 1;
     return node;
   };
 
