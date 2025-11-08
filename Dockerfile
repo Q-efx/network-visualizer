@@ -21,8 +21,7 @@ ENV HOST=0.0.0.0
 ENV PORT=4173
 
 COPY --from=build /app/package.json /app/package-lock.json ./
-RUN npm ci --omit=dev
-
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 
 EXPOSE 4173
