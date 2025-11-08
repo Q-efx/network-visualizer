@@ -38,6 +38,10 @@ npm install
 
 ## Usage
 
+### Hosted Deployment
+
+The latest container image is continuously deployed to Railway at [https://network-visualizer-production.up.railway.app/](https://network-visualizer-production.up.railway.app/).
+
 ### Development
 ```bash
 npm run dev
@@ -56,6 +60,15 @@ npm run preview
 ### Lint
 ```bash
 npm run lint
+```
+
+### Docker
+
+Pull the latest published image from GitHub Container Registry and run it locally (exposes nginx on port 80 inside the container):
+
+```bash
+docker pull ghcr.io/q-efx/network-visualizer:latest
+docker run -p 8080:80 ghcr.io/q-efx/network-visualizer:latest
 ```
 
 ## How to Use
@@ -131,5 +144,3 @@ network-visualizer/
 ## License
 
 MIT
-
-## Docker and images
