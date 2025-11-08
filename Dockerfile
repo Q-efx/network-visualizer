@@ -12,18 +12,12 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine
+FROM nginx:1.27-alpine
 
-WORKDIR /app
+# Remove default static assets and copy the build output
+RUN rm -rf /usr/share/nginx/html/*
+COPY --from=build /app/dist /usr/share/nginx/html
 
-ENV NODE_ENV=production
-ENV HOST=0.0.0.0
-ENV PORT=4173
+EXPOSE 80
 
-COPY --from=build /app/package.json /app/package-lock.json ./
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-
-EXPOSE 4173
-
-CMD ["npx", "vite", "preview", "--host", "0.0.0.0", "--port", "4173"]
+CMD ["nginx", "-g", "daemon off;"]
