@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
   release:
     types: [published]
   workflow_dispatch:
@@ -42,16 +44,25 @@ jobs:
       - name: Set additional tags
         id: tags
         run: |
-          TAGS="${{ steps.meta.outputs.tags }}"
+          tags='${{ steps.meta.outputs.tags }}'
+
           if [[ "${{ github.event_name }}" == "release" ]]; then
-            TAGS+="\n${{ steps.vars.outputs.image }}:${{ github.event.release.tag_name }}"
+            release_tag='${{ github.event.release.tag_name }}'
+            if [[ -n "$release_tag" ]]; then
+              tags="${tags}"$'\n''${{ steps.vars.outputs.image }}:'"${release_tag}"
+            fi
           elif [[ "${{ github.ref_type }}" == "tag" ]]; then
-            TAG_NAME="${GITHUB_REF##*/}"
-            TAGS+="\n${{ steps.vars.outputs.image }}:${TAG_NAME}"
+            tag_name="${GITHUB_REF##*/}"
+            if [[ -n "$tag_name" ]]; then
+              tags="${tags}"$'\n''${{ steps.vars.outputs.image }}:'"${tag_name}"
+            fi
           fi
-          echo "tags<<EOF" >> $GITHUB_OUTPUT
-          echo "$TAGS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+
+          {
+            echo "tags<<'EOF'"
+            printf '%s\n' "$tags"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
