@@ -131,3 +131,5 @@ network-visualizer/
 ## License
 
 MIT
+
+## Docker and images
