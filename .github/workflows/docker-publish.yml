@@ -40,30 +40,15 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ steps.vars.outputs.image }}
-
-      - name: Set additional tags
-        id: tags
-        run: |
-          tags='${{ steps.meta.outputs.tags }}'
-
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            release_tag='${{ github.event.release.tag_name }}'
-            if [[ -n "$release_tag" ]]; then
-              tags="${tags}"$'\n''${{ steps.vars.outputs.image }}:'"${release_tag}"
-            fi
-          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
-            tag_name="${GITHUB_REF##*/}"
-            if [[ -n "$tag_name" ]]; then
-              tags="${tags}"$'\n''${{ steps.vars.outputs.image }}:'"${tag_name}"
-            fi
-          fi
-
-          printf 'tags<<EOF\n%s\nEOF\n' "$tags" >> "$GITHUB_OUTPUT"
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+            type=semver,pattern={{version}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.tags.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
