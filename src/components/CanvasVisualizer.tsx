@@ -107,6 +107,53 @@ const CanvasVisualizer = ({ nodes, edges, width, height, onNodePositionChange }:
     const hasAction = Boolean(edge.action);
     const hasPorts = Boolean(edge.ports && edge.ports.length > 0);
     const portsText = hasPorts ? edge.ports!.join(', ') : undefined;
+    const dx = targetNode.x - sourceNode.x;
+    const dy = targetNode.y - sourceNode.y;
+    const isMostlyHorizontal = Math.abs(dx) >= Math.abs(dy);
+
+  const actionWidth = 140;
+  const portsWidth = 160;
+  const verticalGapTop = hasPorts ? 26 : 16;
+
+    let actionPos: { x: number; y: number } | undefined;
+    let portsPos: { x: number; y: number } | undefined;
+
+    if (isMostlyHorizontal) {
+      if (hasAction) {
+        actionPos = {
+          x: midX - actionWidth / 2,
+          y: midY - verticalGapTop,
+        };
+      }
+      if (portsText) {
+        portsPos = {
+          x: midX - portsWidth / 2,
+          y: midY + 10,
+        };
+      }
+    } else {
+      if (hasAction && portsText) {
+        const sideOffset = 80;
+        actionPos = {
+          x: midX - sideOffset - actionWidth / 2,
+          y: midY - 10,
+        };
+        portsPos = {
+          x: midX + sideOffset - portsWidth / 2,
+          y: midY - 10,
+        };
+      } else if (hasAction) {
+        actionPos = {
+          x: midX - actionWidth / 2,
+          y: midY - 20,
+        };
+      } else if (portsText) {
+        portsPos = {
+          x: midX - portsWidth / 2,
+          y: midY - 20,
+        };
+      }
+    }
 
     return (
       <Group key={edge.id}>
@@ -119,30 +166,28 @@ const CanvasVisualizer = ({ nodes, edges, width, height, onNodePositionChange }:
           pointerLength={10}
           pointerWidth={10}
         />
-        {hasAction && (
+        {hasAction && actionPos && (
           <Text
             text={edge.action}
-            x={midX}
-            y={midY - (hasPorts ? 12 : 6)}
+            x={actionPos.x}
+            y={actionPos.y}
             fontSize={10}
             fill={color}
             fontStyle="bold"
-            width={120}
+            width={actionWidth}
             align="center"
-            offsetX={60}
             padding={2}
           />
         )}
-        {portsText && (
+        {portsText && portsPos && (
           <Text
             text={portsText}
-            x={midX}
-            y={midY + (hasAction ? 4 : -6)}
+            x={portsPos.x}
+            y={portsPos.y}
             fontSize={10}
             fill="#000000"
-            width={140}
+            width={portsWidth}
             align="center"
-            offsetX={70}
             padding={2}
           />
         )}
