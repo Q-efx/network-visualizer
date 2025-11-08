@@ -24,6 +24,8 @@ export interface VisualNode {
   selector?: LabelSelector;
   x: number;
   y: number;
+  width?: number;
+  height?: number;
 }
 
 export interface VisualEdge {
@@ -83,6 +85,14 @@ export function extractVisualizationData(policies: Policy[]): VisualizationData 
   let nodeCounter = 0;
   let edgeCounter = 0;
 
+  const estimateTextSize = (text: string, fontSize = 12, padding = 20) => {
+    const lines = text.split('\n');
+    const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
+    const width = Math.max(80, longestLine * (fontSize * 0.6) + padding);
+    const height = lines.length * (fontSize + 6) + padding;
+    return { width, height };
+  };
+
   const createOrGetNode = (
     type: 'namespace' | 'pod' | 'external',
     label: string,
@@ -94,6 +104,9 @@ export function extractVisualizationData(policies: Policy[]): VisualizationData 
       return nodeMap.get(id)!;
     }
 
+    const labelText = namespace ? `${label}\n(ns: ${namespace})` : label;
+    const { width, height } = estimateTextSize(labelText, 12, 30);
+
     const node: VisualNode = {
       id,
       type,
@@ -102,6 +115,8 @@ export function extractVisualizationData(policies: Policy[]): VisualizationData 
       selector,
       x: (nodeCounter % LAYOUT_CONFIG.NODES_PER_ROW) * LAYOUT_CONFIG.NODE_HORIZONTAL_SPACING + LAYOUT_CONFIG.INITIAL_X_OFFSET,
       y: Math.floor(nodeCounter / LAYOUT_CONFIG.NODES_PER_ROW) * LAYOUT_CONFIG.NODE_VERTICAL_SPACING + LAYOUT_CONFIG.INITIAL_Y_OFFSET,
+      width,
+      height,
     };
     nodeCounter++;
     nodeMap.set(id, node);

@@ -32,13 +32,24 @@ const CanvasVisualizer = ({ nodes, edges, width, height, onNodePositionChange }:
 
   const renderNode = (node: VisualNode) => {
     const color = getNodeColor(node.type);
-    const shape = node.type === 'namespace' ? 'rect' : 'circle';
+    const shape = node.type === 'pod' ? 'circle' : 'rect';
 
     const handleDragEnd = (e: { target: { x: () => number; y: () => number } }) => {
       if (onNodePositionChange) {
         onNodePositionChange(node.id, e.target.x(), e.target.y());
       }
     };
+
+    const width = node.width ?? (shape === 'rect' ? 120 : 80);
+    const height = node.height ?? (shape === 'rect' ? 60 : 80);
+    const offsetX = width / 2;
+    const offsetY = height / 2;
+    const labelText = node.namespace ? `${node.label}\nns: ${node.namespace}` : node.label;
+    const fontSize = 12;
+    const lineHeight = 1.2;
+    const textLines = labelText.split('\n');
+    const textWidth = Math.max(width - 20, 80);
+    const textHeight = textLines.length * fontSize * lineHeight + 4;
 
     return (
       <Group 
@@ -50,44 +61,35 @@ const CanvasVisualizer = ({ nodes, edges, width, height, onNodePositionChange }:
       >
         {shape === 'rect' ? (
           <Rect
-            width={120}
-            height={60}
+            width={width}
+            height={height}
             fill={color}
             stroke="#000000"
             strokeWidth={2}
-            cornerRadius={5}
-            offsetX={60}
-            offsetY={30}
+            cornerRadius={8}
+            offsetX={offsetX}
+            offsetY={offsetY}
           />
         ) : (
           <Circle
-            radius={40}
+            radius={Math.max(width, height) / 2}
             fill={color}
             stroke="#000000"
             strokeWidth={2}
           />
         )}
         <Text
-          text={node.label}
-          fontSize={12}
+          text={labelText}
+          fontSize={fontSize}
           fill="#FFFFFF"
           fontStyle="bold"
-          width={100}
+          width={textWidth}
           align="center"
-          offsetX={50}
-          offsetY={shape === 'rect' ? 6 : -6}
+          x={-textWidth / 2}
+          y={-textHeight / 2}
+          lineHeight={lineHeight}
+          padding={4}
         />
-        {node.namespace && (
-          <Text
-            text={`ns: ${node.namespace}`}
-            fontSize={10}
-            fill="#FFFFFF"
-            width={100}
-            align="center"
-            offsetX={50}
-            offsetY={shape === 'rect' ? -20 : 10}
-          />
-        )}
       </Group>
     );
   };
